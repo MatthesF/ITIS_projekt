@@ -1,7 +1,7 @@
 [project]
-name = "itis-projekt"
+name = "wildfire-detection"
 version = "0.1.0"
-description = "Add your description here"
+description = "Wildfire detection from Sentinel-2 + FIRMS with ResNet classifiers"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

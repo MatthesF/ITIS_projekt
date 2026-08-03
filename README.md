@@ -1,34 +1,79 @@
 # Wildfire Detection (Sentinel-2)
 
-Small, focused pipeline to build a 3-class dataset (fire / no_fire / burn_scar) from FIRMS + Sentinel-2, and train ResNet classifiers.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-ResNet-ee4c2c.svg)](https://pytorch.org/)
+[![Sentinel-2](https://img.shields.io/badge/data-Sentinel--2-2ecc71.svg)](https://sentinel.esa.int/web/sentinel/missions/sentinel-2)
+[![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
+
+Build a **3-class** satellite dataset (**fire** / **no_fire** / **burn_scar**) from [FIRMS](https://firms.modaps.eosdis.nasa.gov/) + Sentinel-2, then train ResNet classifiers on RGB or 6-band patches.
 
 ![Three example patches](data/figures/report_three_examples.png)
 
-## Quick Start
-- Install: `pip install -r requirements.txt`
-- Configure `.env` with Sentinel Hub creds (`SH_CLIENT_ID`, `SH_CLIENT_SECRET`)
-- Pipeline:
-  1) `python scripts/build_candidates.py`
-  2) `python scripts/download_dataset.py`
-  3) `python scripts/prepare_splits.py`
-- Train:
-  - RGB: `python models/train_resnet.py`
-  - 6-band: set `EXPERIMENT="all"` in `train_resnet.py`
+## Features
 
-## What you get
-- Data in `data/splits/` (train/val/test), bands: B02,B03,B04,B08,B11,B12
-- Quality filters: cloud/water/valid pixels + thermal (B12) thresholds
-- Geographic split to avoid spatial leakage
+- FIRMS → Sentinel-2 candidate matching and patch download
+- Quality filters: cloud / water / valid pixels + thermal (B12) thresholds
+- Geographic train/val/test split (avoids spatial leakage)
+- ResNet training for RGB and 6-band inputs (MPS / CUDA auto-detected)
 
-## Key Files
-- `scripts/build_candidates.py` — match FIRMS to S2 catalog
-- `scripts/download_dataset.py` — download patches + metadata
-- `scripts/prepare_splits.py` — filter, balance, and split
-- `models/dataset.py` — PyTorch dataset + transforms
-- `models/train_resnet.py` — RGB/6-band training (ReduceLROnPlateau, dropout, label smoothing)
+## Setup
 
-## Notes
-- MPS/Metal and CUDA are auto-detected.
-- Checkpoints saved to `models/checkpoints/`.
-- For detailed steps, see `DATA_PIPELINE.md`.
+```bash
+# with uv (recommended)
+uv sync
 
+# or pip
+pip install -e .
+```
+
+Create a `.env` with Sentinel Hub credentials:
+
+```bash
+SH_CLIENT_ID=...
+SH_CLIENT_SECRET=...
+```
+
+## Pipeline
+
+```bash
+python scripts/build_candidates.py   # match FIRMS to S2 catalog
+python scripts/download_dataset.py   # download patches + metadata
+python scripts/prepare_splits.py     # filter, balance, geographic split
+```
+
+## Train
+
+```bash
+# RGB
+python models/train_resnet.py
+
+# 6-band: set EXPERIMENT="all" in models/train_resnet.py, then rerun
+```
+
+Checkpoints land in `models/checkpoints/`.
+
+## Data
+
+| Item | Detail |
+|------|--------|
+| Splits | `data/splits/` — train / val / test |
+| Bands | B02, B03, B04, B08, B11, B12 |
+| Classes | `fire`, `no_fire`, `burn_scar` |
+
+## Project layout
+
+```
+scripts/
+  build_candidates.py   # FIRMS ↔ S2 matching
+  download_dataset.py   # patch download
+  prepare_splits.py     # filter + balance + split
+  map_fires.py          # map helpers
+models/
+  dataset.py            # PyTorch dataset + transforms
+  train_resnet.py       # RGB / 6-band ResNet training
+data/figures/           # example visuals
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
